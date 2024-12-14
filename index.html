@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrContainer {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        #qrCodes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: auto;
+            width: 100%;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .qr-code {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid #ddd;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 10px;
+            width: 100%;
+            max-width: 150px;
+            margin: 0 auto;
+        }
+
+        .qr-code img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+
+        .qr-code span {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            word-wrap: break-word;
+            text-align: center;
+            display: block;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        @media print {
+            body {
+                visibility: hidden;
+            }
+
+            #qrCodes {
+                visibility: visible;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                grid-auto-rows: auto;
+                page-break-inside: avoid;
+            }
+
+            .qr-code {
+                page-break-inside: avoid;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>CART POSITION  QR MAKER</h1>
+    <div class="form-container">
+        <div class="row">
+            <label for="startCode">Start Code:</label>
+            <input type="text" id="startCode" value="BB1500081" placeholder="Enter Start Code">
+        </div>
+        <div class="row">
+            <label for="endCode">End Code:</label>
+            <input type="text" id="endCode" value="BB1500150" placeholder="Enter End Code">
+        </div>
+        <div class="row">
+            <button onclick="generateQRCodes()">Generate QR Codes</button>
+            <button onclick="printQRCodePage()">Print QR Codes</button>
+        </div>
+    </div>
+    <div id="qrContainer">
+        <div id="qrCodes"></div>
+    </div>
+
+    <script>
+        async function generateQRCodes() {
+            const startCode = document.getElementById("startCode").value.trim();
+            const endCode = document.getElementById("endCode").value.trim();
+            const qrContainer = document.getElementById("qrCodes");
+
+            // Clear previous QR codes
+            qrContainer.innerHTML = "";
+
+            // Validate if start and end codes have same prefix
+            if (!startCode || !endCode || startCode.length !== endCode.length || startCode.substring(0, startCode.length - 4) !== endCode.substring(0, endCode.length - 4)) {
+                alert("Please enter valid start and end codes with the same prefix.");
+                return;
+            }
+
+            // Extract numeric parts from the start and end codes
+            const prefix = startCode.substring(0, startCode.length - 4);
+            const startNum = parseInt(startCode.substring(startCode.length - 4));
+            const endNum = parseInt(endCode.substring(endCode.length - 4));
+
+            // Validate numeric parts
+            if (isNaN(startNum) || isNaN(endNum) || startNum > endNum) {
+                alert("Please enter valid numeric codes.");
+                return;
+            }
+
+            // Generate QR codes for the range
+            for (let i = startNum; i <= endNum; i++) {
+                let code = `${prefix}${i.toString().padStart(4, "0")}`;
+                await addQRCode(code);
+            }
+        }
+
+        const addQRCode = async (code) => {
+            const qrElement = document.createElement("div");
+            qrElement.className = "qr-code";
+
+            // Generate QR code image from code
+            QRCode.toDataURL(code, (err, url) => {
+                if (!err) {
+                    const img = document.createElement("img");
+                    img.src = url;
+                    img.alt = code;
+                    const span = document.createElement("span");
+                    span.textContent = code;
+                    qrElement.appendChild(img);
+                    qrElement.appendChild(span);
+                    document.getElementById("qrCodes").appendChild(qrElement);
+                }
+            });
+        };
+
+        function printQRCodePage() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
